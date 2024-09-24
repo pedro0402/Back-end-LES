@@ -16,6 +16,7 @@ import java.io.File;
 
 @RestController
 @RequestMapping("/api/file")
+@CrossOrigin(origins = "http://localhost:3000")
 public class FileController {
 
     @Autowired
