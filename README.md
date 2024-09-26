@@ -1,4 +1,6 @@
 # Back-end-LES
+<<<<<<< HEAD
+=======
 
 ### Objetivo do projeto
 
@@ -26,3 +28,4 @@ Pré-requisitos
 - Java 17 ou superior instalado.
 - Maven para gerenciar as dependências.
 - SpringBoot instalado e configurado.
+>>>>>>> dev
