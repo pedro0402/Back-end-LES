@@ -1,7 +1,4 @@
 # Back-end-LES
-<<<<<<< HEAD
-=======
-
 ### Objetivo do projeto
 
 O projeto consiste em uma aplicação que consome um arquivo PDF, realiza sua tradução e resumo, e disponibiliza o resultado para download. Para alcançar isso, o sistema se comunica com duas APIs externas: uma para realizar a tradução do conteúdo e outra para gerar o resumo (opcional) . O backend da aplicação é desenvolvido utilizando SpringBoot, oferecendo uma interface REST para que o usuário possa enviar o PDF e baixar o resultado.
@@ -28,4 +25,3 @@ Pré-requisitos
 - Java 17 ou superior instalado.
 - Maven para gerenciar as dependências.
 - SpringBoot instalado e configurado.
->>>>>>> dev
