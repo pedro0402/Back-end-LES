@@ -12,14 +12,17 @@ public class UploadFileVO implements Serializable {
     private String fileType;
     private long size;
 
+    private String summary;
+
     public UploadFileVO() {
     }
 
-    public UploadFileVO(String fileName, String fileDownloadUri, String fileType, long size) {
+    public UploadFileVO(String fileName, String fileDownloadUri, String fileType, long size, String summary) {
         this.fileName = fileName;
         this.fileDownloadUri = fileDownloadUri;
         this.fileType = fileType;
         this.size = size;
+        this.summary = summary;
     }
 
     public String getFileName() {
@@ -52,5 +55,13 @@ public class UploadFileVO implements Serializable {
 
     public void setSize(long size) {
         this.size = size;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 }

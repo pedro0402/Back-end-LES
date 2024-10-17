@@ -78,4 +78,13 @@ public class FileStorageService {
         }
     }
 
+    public String storeSummaryFile(byte[] pdfBytes, String fileName) {
+        try {
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.write(targetLocation, pdfBytes);
+            return fileName;
+        } catch (Exception e) {
+            throw new FileStorageException("Não é possível armazenar o arquivo resumo " + fileName + " tente novamente.", e);
+        }
+    }
 }

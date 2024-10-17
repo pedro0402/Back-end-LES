@@ -13,6 +13,6 @@ public class FileStorageExampleLesApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(FileStorageExampleLesApplication.class, args);
-	}
 
+	}
 }
