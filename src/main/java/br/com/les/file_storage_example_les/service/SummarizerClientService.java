@@ -1,13 +1,19 @@
 package br.com.les.file_storage_example_les.service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.Map;
+
+@Service
 public class SummarizerClientService {
-    private static final String SUMMARIZER_API_URL = "http://localhost:5000/summarize";
+
+    @Value("${summarizer.api.url")
+    private String summarizerApiUrl;
 
     public String summarizeText(String text, double ratio) {
         RestTemplate restTemplate = new RestTemplate();
@@ -18,11 +24,11 @@ public class SummarizerClientService {
         requestBody.put("text", text);
         requestBody.put("ratio", ratio);
 
-        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+        HttpEntity<Map<String, Object>> requestEntity = createRequestEntity(requestBody, headers);
 
         try {
             ResponseEntity<Map> response = restTemplate.exchange(
-                    SUMMARIZER_API_URL,
+                    summarizerApiUrl,
                     HttpMethod.POST,
                     requestEntity,
                     Map.class
@@ -34,6 +40,10 @@ public class SummarizerClientService {
             e.printStackTrace();
             return "Error during summarization: " + e.getMessage();
         }
+    }
+
+    private HttpEntity<Map<String, Object>> createRequestEntity(Map<String,Object> requestBody, HttpHeaders headers){
+        return new HttpEntity<>(requestBody, headers);
     }
 
 }
