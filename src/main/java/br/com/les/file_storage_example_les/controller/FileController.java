@@ -3,7 +3,10 @@ package br.com.les.file_storage_example_les.controller;
 import br.com.les.file_storage_example_les.data.vo.UploadFileVO;
 import br.com.les.file_storage_example_les.service.FileStorageService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +32,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @CrossOrigin(origins = "http://localhost:3000")
 public class FileController {
 
+    private static final Logger logger = LoggerFactory.getLogger(FileController.class);
+
     @Autowired
     private FileStorageService storageService;
 
-    private static final String SUMMARIZER_API_URL = "http://localhost:5000/summarize";
+    @Value("${summarizer.api.url}")
+    private String summarizerApiUrl;
 
     private Map<String, String> summaryStore = new ConcurrentHashMap<>();
 
@@ -59,34 +65,42 @@ public class FileController {
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
-        File tempFile;
+        File tempFile = null;
         try {
-            tempFile = File.createTempFile("tempFile", ".pdf");
-            file.transferTo(tempFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "Error creating temp file: " + e.getMessage();
-        }
+            tempFile = createTempFile(file);
+            body.add("file", new org.springframework.core.io.FileSystemResource(tempFile));
+            body.add("ratio", 0.2);
 
-        body.add("file", new org.springframework.core.io.FileSystemResource(tempFile));
-        body.add("ratio", 0.2);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-        try {
             ResponseEntity<Map> response = restTemplate.exchange(
-                    SUMMARIZER_API_URL,
+                    summarizerApiUrl,
                     HttpMethod.POST,
                     requestEntity,
                     Map.class
             );
 
-            Map<String, Object> responseBody = response.getBody();
-            return (String) responseBody.get("summary");
+            if (response.getBody() != null && response.getStatusCode().is2xxSuccessful()) {
+                return (String) response.getBody().get("summary");
+            } else {
+                logger.error("Failed to retrieve summary: Empty response or unsuccessful status code");
+                return "Failed to retrieve summary.";
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error during summarization", e);
             return "Error during summarization: " + e.getMessage();
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
+    }
+
+    private File createTempFile(MultipartFile file) throws IOException{
+        File tempFile = File.createTempFile("tempFile", ".pdf");
+        file.transferTo(tempFile);
+        return tempFile;
     }
 
     private String formatSummary(String summary) {
