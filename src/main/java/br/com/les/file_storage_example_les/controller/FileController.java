@@ -51,8 +51,8 @@ public class FileController {
         summaryStore.put(fileName, summary);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/file/downloadFile/")
-                .path(fileName)
+                .path("/api/file/downloadSummary")
+                .queryParam("fileName", fileName)
                 .toUriString();
 
         return new UploadFileVO(fileName, fileDownloadUri, file.getContentType(), file.getSize(), summary);
