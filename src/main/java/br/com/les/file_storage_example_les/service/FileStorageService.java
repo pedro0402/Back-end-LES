@@ -42,28 +42,30 @@ public class FileStorageService {
 
     public String storeFile(MultipartFile file) {
         String fileName = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
-        String contentType = file.getContentType();
+        validateFile(fileName, file.getContentType());
 
         try {
-            if (!"application/pdf".equals(contentType)) {
-                throw new FileStorageException("Apenas arquivos PDF são permitidos. Tipo de arquivo: " + contentType);
-            }
-
-            if (!fileName.toLowerCase().endsWith(".pdf")) {
-                throw new FileStorageException("O arquivo " + fileName + " não é do tipo PDF. Apenas arquivos PDF!");
-            }
-
-            if (fileName.contains("..")) {
-                throw new FileStorageException("Nome do arquivo possui uma sequência errada! " + fileName);
-            }
-
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
             return fileName;
         } catch (Exception e) {
             throw new FileStorageException("Não é possível armazenar o arquivo " + fileName + " tente novamente.", e);
         }
+    }
+
+    private void validateFile(String fileName, String contentType){
+        if (!"application/pdf".equals(contentType)) {
+            throw new FileStorageException("Apenas arquivos PDF são permitidos. Tipo de arquivo: " + contentType);
+        }
+
+        if (!fileName.toLowerCase().endsWith(".pdf")) {
+            throw new FileStorageException("O arquivo " + fileName + " não é do tipo PDF. Apenas arquivos PDF!");
+        }
+
+        if (fileName.contains("..")) {
+            throw new FileStorageException("Nome do arquivo possui uma sequência errada! " + fileName);
+        }
+
     }
 
     public Resource loadFileAsResource(String fileName) {
@@ -78,4 +80,13 @@ public class FileStorageService {
         }
     }
 
+    public String storeSummaryFile(byte[] pdfBytes, String fileName) {
+        try {
+            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            Files.write(targetLocation, pdfBytes);
+            return fileName;
+        } catch (Exception e) {
+            throw new FileStorageException("Não é possível armazenar o arquivo resumo " + fileName + " tente novamente.", e);
+        }
+    }
 }
