@@ -24,6 +24,7 @@ import com.itextpdf.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,23 +41,11 @@ public class FileController {
     @Value("${summarizer.api.url}")
     private String summarizerApiUrl;
 
+    @Value("${translate.api.url}")
+    private String translateApiUrl;
+
     private Map<String, String> summaryStore = new ConcurrentHashMap<>();
 
-    @PostMapping("/uploadFile")
-    public UploadFileVO uploadFile(@RequestParam("file") MultipartFile file) {
-        String fileName = storageService.storeFile(file);
-
-        String summary = formatSummary(sendFileToSummarizer(file));
-
-        summaryStore.put(fileName, summary);
-
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/file/downloadSummary")
-                .queryParam("fileName", fileName)
-                .toUriString();
-
-        return new UploadFileVO(fileName, fileDownloadUri, file.getContentType(), file.getSize(), summary);
-    }
 
     private String sendFileToSummarizer(MultipartFile file) {
         RestTemplate restTemplate = new RestTemplate();
@@ -97,7 +86,56 @@ public class FileController {
         }
     }
 
-    private File createTempFile(MultipartFile file) throws IOException{
+    private String sendFileToTranslator(MultipartFile file, String language) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        File tempFile = null;
+        try {
+            tempFile = createTempFile(file);
+            body.add("file", new org.springframework.core.io.FileSystemResource(tempFile));
+            body.add("language", language);
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+            ResponseEntity<Map> response = restTemplate.exchange(
+                    translateApiUrl,
+                    HttpMethod.POST,
+                    requestEntity,
+                    Map.class
+            );
+
+            if (response.getBody() != null && response.getStatusCode().is2xxSuccessful()) {
+                return (String) response.getBody().get("translated_text");
+            } else {
+                logger.error("Failed to retrieve translation: Empty response or unsuccessful status code");
+                return "Failed to retrieve translation.";
+            }
+
+        } catch (Exception e) {
+            logger.error("Error during translation", e);
+            return "Error during translation: " + e.getMessage();
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
+        }
+    }
+
+    @PostMapping("/translateFile")
+    public ResponseEntity<Map<String, String>> translateFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("language") String language) {
+
+        String translatedText = sendFileToTranslator(file, language);
+        Map<String, String> response = Map.of("translated_text", translatedText);
+        return ResponseEntity.ok(response);
+    }
+
+    private File createTempFile(MultipartFile file) throws IOException {
         File tempFile = File.createTempFile("tempFile", ".pdf");
         file.transferTo(tempFile);
         return tempFile;
@@ -149,7 +187,7 @@ public class FileController {
             storageService.storeSummaryFile(pdfBytes, summaryFileName);
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().build(); // Retorna erro se algo der errado
+            return ResponseEntity.internalServerError().build();
         } catch (DocumentException e) {
             throw new RuntimeException(e);
         }
@@ -159,6 +197,53 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + "summary_" + fileName + "\"")
                 .body(pdfBytes);
     }
+
+    @GetMapping("/downloadTranslatedFile/{fileName:.+}")
+    public ResponseEntity<Resource> downloadTranslatedFile(@PathVariable String fileName, HttpServletRequest request) {
+        String translatedFileName = fileName;
+
+        Resource resource = storageService.loadTranslationFileAsResource(translatedFileName);
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (Exception e) {
+            logger.error("Could not determine file type.", e);
+        }
+
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+
+    @PostMapping("/uploadFile")
+    public UploadFileVO uploadFile(@RequestParam("file") MultipartFile file) {
+        String fileName = storageService.storeFile(file);
+
+        String summary = formatSummary(sendFileToSummarizer(file));
+        summaryStore.put(fileName, summary);
+
+        String translatedFileName = "translated_" + fileName;
+        String translatedFileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/file/downloadTranslation/")
+                .path(translatedFileName)
+                .toUriString();
+
+        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/file/downloadSummary")
+                .queryParam("fileName", fileName)
+                .toUriString();
+
+        return new UploadFileVO(fileName, fileDownloadUri, file.getContentType(), file.getSize(), summary);
+    }
+
+
 
     private String getSummaryFromFile(String fileName) {
         return summaryStore.getOrDefault(fileName, "Resumo não encontrado.");
@@ -176,4 +261,3 @@ public class FileController {
         return outputStream.toByteArray();
     }
 }
-
