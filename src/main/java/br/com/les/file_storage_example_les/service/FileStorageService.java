@@ -11,16 +11,20 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class FileStorageService {
 
     private final Path fileStorageLocation;
+    @Value("${file.upload-dir}")
+    private String uploadDir;
 
     @Autowired
     public FileStorageService(FileStorageConfig fileStorageConfig) {
@@ -79,6 +83,21 @@ public class FileStorageService {
             throw new FileNotFoundException("Arquivo não encontrado" + fileName, e);
         }
     }
+
+    public Resource loadTranslationFileAsResource(String fileName) {
+        try {
+            Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new RuntimeException("File not found: " + fileName);
+            }
+        } catch (MalformedURLException e) {
+            throw new RuntimeException("File not found: " + fileName, e);
+        }
+    }
+
 
     public String storeSummaryFile(byte[] pdfBytes, String fileName) {
         try {
