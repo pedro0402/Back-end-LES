@@ -126,13 +126,29 @@ public class FileController {
     }
 
     @PostMapping("/translateFile")
-    public ResponseEntity<Map<String, String>> translateFile(
+    public ResponseEntity<byte[]> translateFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("language") String language) {
 
         String translatedText = sendFileToTranslator(file, language);
-        Map<String, String> response = Map.of("translated_text", translatedText);
-        return ResponseEntity.ok(response);
+
+        if (translatedText == null || translatedText.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to retrieve translation.".getBytes());
+        }
+
+        byte[] pdfBytes;
+        try {
+            pdfBytes = createPdfFromSummary(translatedText);
+        } catch (DocumentException | IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"translated_file.pdf\"")
+                .body(pdfBytes);
     }
 
     private File createTempFile(MultipartFile file) throws IOException {
@@ -197,30 +213,6 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + "summary_" + fileName + "\"")
                 .body(pdfBytes);
     }
-
-    @GetMapping("/downloadTranslatedFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadTranslatedFile(@PathVariable String fileName, HttpServletRequest request) {
-        String translatedFileName = fileName;
-
-        Resource resource = storageService.loadTranslationFileAsResource(translatedFileName);
-
-        String contentType = null;
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (Exception e) {
-            logger.error("Could not determine file type.", e);
-        }
-
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
-    }
-
 
     @PostMapping("/uploadFile")
     public UploadFileVO uploadFile(@RequestParam("file") MultipartFile file) {
