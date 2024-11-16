@@ -171,26 +171,7 @@ public class FileController {
         return formattedSummary;
     }
 
-    @GetMapping("/downloadFile/{fileName:.+}")
-    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
-        Resource resource = storageService.loadFileAsResource(fileName);
-
-        String contentType = null;
-
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                .body(resource);
-    }
-
+    // para usar -> http://localhost:8081/api/file/downloadSummary?fileName=example.pdf
     @GetMapping("/downloadSummary")
     public ResponseEntity<byte[]> downloadSummary(@RequestParam("fileName") String fileName) {
         String summary = getSummaryFromFile(fileName);
