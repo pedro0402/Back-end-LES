@@ -1,9 +1,8 @@
 package br.com.les.file_storage_example_les.service;
 import br.com.les.file_storage_example_les.controller.FileController;
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.draw.LineSeparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,31 +45,35 @@ public class SummarizeService {
         return summaryStore.getOrDefault(fileName, "Resumo não encontrado.");
     }
 
-    public byte[] createPdfFromSummary(String summary) throws DocumentException, IOException {
+    public byte[] createPdfFromSummary(String summary, String titleText) throws DocumentException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Document document = new Document();
         PdfWriter.getInstance(document, outputStream);
+
         document.open();
 
-        document.add(new Paragraph(summary));
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, BaseColor.BLACK);
+        Paragraph title = new Paragraph(titleText, titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        title.setSpacingAfter(10);
+        document.add(title);
+
+        LineSeparator separator = new LineSeparator();
+        separator.setPercentage(100);
+        separator.setLineColor(BaseColor.LIGHT_GRAY);
+        document.add(new Chunk(separator));
+
+        Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.DARK_GRAY);
+        Paragraph content = new Paragraph(summary, contentFont);
+        content.setAlignment(Element.ALIGN_JUSTIFIED);
+        content.setSpacingBefore(10);
+        content.setSpacingAfter(10);
+        document.add(content);
 
         document.close();
         return outputStream.toByteArray();
     }
 
-    public String formatSummary(String summary) {
-        String formattedSummary = summary.replaceAll("\\n", " ").replaceAll("\\s+", " ").trim();
-
-        if (formattedSummary.length() > 0) {
-            formattedSummary = formattedSummary.replaceAll("[,\\s]*$", "");
-        }
-
-        if (!formattedSummary.endsWith(".")) {
-            formattedSummary += ".";
-        }
-
-        return formattedSummary;
-    }
 
     public String sendFileToSummarizer(MultipartFile file) {
         RestTemplate restTemplate = new RestTemplate();
@@ -95,7 +98,8 @@ public class SummarizeService {
             );
 
             if (response.getBody() != null && response.getStatusCode().is2xxSuccessful()) {
-                return (String) response.getBody().get("summary");
+                String summary = (String) response.getBody().get("summary");
+                return TextFormatter.formatText(summary);
             } else {
                 logger.error("Failed to retrieve summary: Empty response or unsuccessful status code");
                 return "Failed to retrieve summary.";
