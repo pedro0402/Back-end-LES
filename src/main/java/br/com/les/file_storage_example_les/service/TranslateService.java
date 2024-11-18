@@ -40,7 +40,8 @@ public class TranslateService {
             ResponseEntity<Map> response = restTemplate.exchange(translateApiUrl, HttpMethod.POST, requestEntity, Map.class);
 
             if (response.getBody() != null && response.getStatusCode().is2xxSuccessful()) {
-                return (String) response.getBody().get("translated_text");
+                String translatedText = (String) response.getBody().get("translated_text");
+                return TextFormatter.formatText(translatedText);
             } else {
                 return "Failed to retrieve translation.";
             }

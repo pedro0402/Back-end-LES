@@ -36,15 +36,26 @@ def translate_text(text, dest_language):
 def save_summary_and_translation_to_pdf(summary, translation, file_name):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=14)
 
-    pdf.cell(200, 10, txt="Resumo:", ln=True)
-    pdf.multi_cell(0, 10, summary)
-    
-    pdf.cell(200, 10, txt="Tradução:", ln=True)
-    pdf.multi_cell(0, 10, translation)
-
-    pdf.output(os.path.join(UPLOAD_DIR, file_name))
+    if summary:
+        pdf.set_text_color(0, 0, 255) 
+        pdf.cell(0, 10, txt="Resumo", ln=True, align="C")
+        pdf.set_text_color(0, 0, 0) 
+        pdf.set_font("Arial", size=12)
+        pdf.ln(5)  
+        pdf.multi_cell(0, 10, summary)
+        pdf.ln(10)
+    if translation:
+        pdf.set_text_color(0, 0, 255)
+        pdf.cell(0, 10, txt="Tradução", ln=True, align="C")
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_font("Arial", size=12)
+        pdf.ln(5)
+        pdf.multi_cell(0, 10, translation)
+        
+    output_path = os.path.join(UPLOAD_DIR, file_name)
+    pdf.output(output_path)
 
 def validate_and_extract_params(request, is_translation=False):
     if 'file' not in request.files:

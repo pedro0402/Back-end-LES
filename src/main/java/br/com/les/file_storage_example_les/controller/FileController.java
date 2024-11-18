@@ -2,6 +2,7 @@ package br.com.les.file_storage_example_les.controller;
 
 import br.com.les.file_storage_example_les.data.vo.UploadFileVO;
 import br.com.les.file_storage_example_les.service.SummarizeService;
+import br.com.les.file_storage_example_les.service.TextFormatter;
 import br.com.les.file_storage_example_les.service.TranslateService;
 import br.com.les.file_storage_example_les.service.FileStorageService;
 import org.slf4j.Logger;
@@ -54,8 +55,8 @@ public class FileController {
 
         byte[] pdfBytes;
         try {
-            pdfBytes = summarizeService.createPdfFromSummary(translatedText);
-        } catch (DocumentException | IOException e) {
+            pdfBytes = summarizeService.createPdfFromSummary(translatedText, "Tradução do Arquivo");
+        } catch (DocumentException e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -75,13 +76,10 @@ public class FileController {
         byte[] pdfBytes;
 
         try {
-            pdfBytes = summarizeService.createPdfFromSummary(summary);
+            pdfBytes = summarizeService.createPdfFromSummary(summary, "Resumo do Arquivo");
 
             String summaryFileName = "summary_" + fileName;
             storageService.storeSummaryFile(pdfBytes, summaryFileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
         } catch (DocumentException e) {
             throw new RuntimeException(e);
         }
@@ -96,7 +94,7 @@ public class FileController {
     public UploadFileVO uploadFile(@RequestParam("file") MultipartFile file) {
         String fileName = storageService.storeFile(file);
 
-        String summary = summarizeService.formatSummary(summarizeService.sendFileToSummarizer(file));
+        String summary = TextFormatter.formatText(summarizeService.sendFileToSummarizer(file));
         summarizeService.summaryStore.put(fileName, summary);
 
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
