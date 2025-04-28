@@ -1,28 +1,117 @@
-# Back-end-LES
+# 📢 Back-end LES
 
-### Objetivo do projeto
+[![Java](https://img.shields.io/badge/Java-17+-blue?style=for-the-badge&logo=java&logoColor=white)](https://www.java.com/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-2.7+-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Maven](https://img.shields.io/badge/Maven-3.8+-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 
-O projeto consiste em uma aplicação que consome um arquivo PDF, realiza sua tradução e resumo, e disponibiliza o resultado para download. Para alcançar isso, o sistema se comunica com duas APIs externas: uma para realizar a tradução do conteúdo e outra para gerar o resumo (opcional) . O backend da aplicação é desenvolvido utilizando SpringBoot, oferecendo uma interface REST para que o usuário possa enviar o PDF e baixar o resultado.
+---
 
-### Fluxo da aplicação:
-- O usuário envia um arquivo PDF para o sistema via uma requisição HTTP
-- O sistema processa o arquivo, extrai o texto e o envia para duas APIs:
-A primeira API realiza a tradução do texto para o idioma escolhido.
-A segunda API gera um resumo a partir do texto traduzido.
-- O texto traduzido e resumido é reformatado em um novo arquivo PDF.
-- O novo PDF é devolvido ao usuário para download.
+## 📋 Descrição do Projeto
 
-### Endpoint das APIs
-- 1: API para upload do PDF: O usuário pode fazer upload de um arquivo PDF através de um endpoint: @PostMapping("/uploadFile")
-- 2: API para download do PDF: Após o processamento, o arquivo pode ser baixado em:  @GetMapping("/downloadFile/{fileName:.+}")
+Aplicação backend que recebe um arquivo PDF, realiza sua **tradução** para outro idioma, gera um **resumo** (opcional) e disponibiliza o resultado para **download**.  
+Desenvolvido com **Spring Boot** e **Python**, integrando APIs externas para tradução e sumarização de texto.
 
-### Stack e o porquê utilizamos
-SpringBoot: Escolhemos o SpringBoot devido à flexibilidade, suporte a serviços RESTful e integração com aplicações utilizando o React.
-API de Tradução: Provê serviços de tradução automática do conteúdo para a linguagem escolhida.
-API de Resumo: Faz o resumo do conteúdo traduzido.
+---
 
-### Acesso e execução do código
-Pré-requisitos
-- Java 17 ou superior instalado.
-- Maven para gerenciar as dependências.
-- SpringBoot instalado e configurado.
+## 🚀 Funcionalidades
+
+- ✅ Upload de arquivos PDF  
+- ✅ Tradução automática para outro idioma  
+- ✅ Geração de resumo do conteúdo traduzido  
+- ✅ Disponibilização para download do novo arquivo  
+
+---
+
+## 🔗 Endpoints Disponíveis
+
+| Método | Endpoint                    | Descrição                              |
+|:------:|:----------------------------|:--------------------------------------:|
+| POST   | `/uploadFile`               | Upload de um arquivo PDF para processar |
+| GET    | `/downloadFile/{fileName}`  | Download do arquivo processado         |
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- Java 17+  
+- Spring Boot  
+- Python 3.11+  
+- Maven  
+- APIs externas para tradução e resumo  
+- Git / GitHub  
+
+---
+
+## ⚙️ Como Rodar o Projeto Localmente
+
+### Pré-requisitos
+
+- Java 17 ou superior  
+- Maven instalado  
+- Python 3.11 ou superior instalado  
+- Configurar o acesso às APIs externas no projeto  
+
+### Passos
+
+```bash
+# Clone o repositório
+git clone https://github.com/pedro0402/Back-end-LES.git
+
+# Acesse o diretório
+cd Back-end-LES
+
+# Instale as dependências Java
+mvn install
+
+# Execute o backend Spring Boot
+mvn spring-boot:run
+
+# (Se houver scripts Python auxiliares, instale as dependências Python)
+pip install -r requirements.txt
+```
+
+## 👤 Estrutura do Projeto
+
+```
+src
+ └── main
+      ├── java
+      │    └── com.les.backend
+      │         ├── controller
+      │         ├── service
+      │         └── config
+      └── resources
+           └── application.properties
+python
+ └── services
+      ├── translator.py
+      └── summarizer.py
+```
+---
+
+## 🎯 Melhorias Futuras
+
+- Implementar autenticação de usuários
+- Histórico de arquivos traduzidos e resumidos
+- Upload de múltiplos arquivos simultaneamente
+- Deploy do projeto na nuvem (Render, Railway, AWS)
+- Melhorias na interface para upload/download (opcional)
+
+---
+
+## 👨‍💼 Autor
+
+| [![Pedro Henrique](https://avatars.githubusercontent.com/u/yourgithubid?s=100)](https://github.com/pedro0402) |
+|:------------------------------------------------------------------------------------------------------------:|
+| [Pedro Henrique](https://github.com/pedro0402) - Desenvolvedor Backend |
+
+---
+
+## 📬 Contato
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/seu-linkedin)
+
+---
+
+> Projeto desenvolvido para fins de estudo e aprimoramento em backend Java/Spring Boot + Python.
